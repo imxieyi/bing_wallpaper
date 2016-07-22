@@ -1,4 +1,7 @@
 *.class
+jna/
+*.exe4j
+
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
