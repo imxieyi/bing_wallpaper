@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="bing_wallpaper/MainFrame.java" kind="src" path="src"/>
+	<classpathentry excluding="bing_wallpaper/MainFrame.java|bing_wallpaper/AboutFrame.java" kind="src" path="src"/>
 	<classpathentry excluding="*.png" including="none" kind="src" path="res"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="C:/Users/wez73/workspace/bing_wallpaper/jna/dist/jna.jar"/>

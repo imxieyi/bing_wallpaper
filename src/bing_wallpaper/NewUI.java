@@ -1,7 +1,6 @@
 package bing_wallpaper;
 
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -105,7 +103,7 @@ public class NewUI extends JFrame {
 	private int mouseX, mouseY;
 	private int num = 0;
 	private static String jarPath;
-	private boolean isRelease;
+	public static boolean isRelease;
 	private static String font;
 	private static NewUI frame;
 
@@ -483,7 +481,7 @@ public class NewUI extends JFrame {
 			IllegalAccessException, UnsupportedLookAndFeelException, UnsupportedEncodingException {
 
 		System.setProperty("awt.useSystemAAFontSettings", "on");
-        System.setProperty("swing.aatext", "true");
+		System.setProperty("swing.aatext", "true");
 		UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 
 		// find best font
