@@ -99,7 +99,6 @@ public class NewUI extends JFrame {
 
 	private JPanel contentPane;
 	private Image icon, bg, closebtn, minibtn, nextbtn, lastbtn, setbtn, settingsbtn;
-	private boolean mousePressed = false;
 	private int mouseX, mouseY;
 	private int num = 0;
 	private static String jarPath;
@@ -308,9 +307,7 @@ public class NewUI extends JFrame {
 					return;
 				}
 
-				// System.out.println("mouse pressed");
-
-				mousePressed = true;
+				// handle mouse drag
 				mouseX = e.getX();
 				mouseY = e.getY();
 
@@ -346,8 +343,6 @@ public class NewUI extends JFrame {
 						setbtn = getRes("set_plain");
 					contentPane.repaint();
 				}
-
-				mousePressed = false;
 			}
 		});
 		contentPane.addMouseMotionListener(new MouseMotionAdapter() {
@@ -463,12 +458,7 @@ public class NewUI extends JFrame {
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
-
-				if (mousePressed) {
-					setLocation(getX() + e.getX() - mouseX, getY() + e.getY() - mouseY);
-					// System.out.println("move window");
-					return;
-				}
+				setLocation(getX() + e.getX() - mouseX, getY() + e.getY() - mouseY);
 			}
 		});
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
