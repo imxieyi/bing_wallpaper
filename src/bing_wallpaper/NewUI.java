@@ -16,6 +16,9 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.sun.jna.Native;
 import com.sun.jna.win32.StdCallLibrary;
 
@@ -101,7 +104,7 @@ public class NewUI extends JFrame {
 	private Image icon, bg, closebtn, minibtn, nextbtn, lastbtn, setbtn, settingsbtn;
 	private int mouseX, mouseY;
 	private int num = 0;
-	private static String jarPath;
+	public static String jarPath;
 	public static boolean isRelease;
 	private static String font;
 	private static NewUI frame;
@@ -139,12 +142,10 @@ public class NewUI extends JFrame {
 	 * @throws IOException
 	 */
 	public NewUI() throws IOException {
-
-		// 判断是否从jar包启动
-		if (getClass().getResource("NewUI.class").toString().startsWith("jar"))
-			isRelease = true;
-		else
-			isRelease = false;
+		// jarPath =
+		// java.net.URLDecoder.decode(NewUI.class.getProtectionDomain().getCodeSource().getLocation().getFile(),
+		// "UTF-8");
+		// jarPath = jarPath.substring(1);
 
 		if (!showWallPaper(num))
 			System.exit(1);
@@ -157,7 +158,7 @@ public class NewUI extends JFrame {
 		lastbtn = getRes("last_white");
 		setbtn = getRes("set_plain");
 
-		setTitle("必应每日壁纸 2.0 beta");
+		setTitle("必应每日壁纸 2.0");
 		setUndecorated(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1280, 720);
@@ -190,7 +191,7 @@ public class NewUI extends JFrame {
 				// draw string
 				g.setColor(new Color(255, 255, 255, 200));
 				g.setFont(new Font(font, Font.BOLD, 20));
-				g.drawString("必应每日壁纸 2.0 Beta", 36, 28);
+				g.drawString("必应每日壁纸 2.0", 36, 28);
 				g.drawString(getDate(), 18, 675);
 				g.drawString(GetWallPaper.description, 18, 700);
 
@@ -468,11 +469,33 @@ public class NewUI extends JFrame {
 	}
 
 	private static boolean init(String[] args) throws ClassNotFoundException, InstantiationException,
-			IllegalAccessException, UnsupportedLookAndFeelException, UnsupportedEncodingException {
+			IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException, IOException {
 
 		System.setProperty("awt.useSystemAAFontSettings", "on");
 		System.setProperty("swing.aatext", "true");
 		UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+
+		// 读取jar包路径
+		// jarPath = java.net.URLDecoder
+		// .decode(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath(),
+		// "UTF-8");
+		// jarPath = jarPath.substring(1);
+		jarPath = System.getProperty("java.class.path");
+		System.out.println(jarPath);
+
+		// 创建临时类用于判断文件路径
+		class TestClass {
+			public TestClass() throws UnsupportedEncodingException {
+				// 判断是否从jar包启动
+				System.out.println(getClass().getResource("NewUI.class").toString());
+				if (getClass().getResource("NewUI.class").toString().startsWith("jar")
+						|| getClass().getResource("NewUI.class").toString().startsWith("rsrc"))
+					isRelease = true;
+				else
+					isRelease = false;
+			}
+		}
+		TestClass ts = new TestClass();
 
 		// find best font
 		String[] fontnames = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
@@ -506,10 +529,112 @@ public class NewUI extends JFrame {
 		if (!f.exists() || !f.isDirectory())
 			f.mkdir();
 
-		jarPath = java.net.URLDecoder.decode(NewUI.class.getProtectionDomain().getCodeSource().getLocation().getFile(),
-				"UTF-8");
-		jarPath = jarPath.substring(1);
+		f = new File(GetWallPaper.dir + "RunHiddenConsole.exe");
+		if (!f.exists()) {
+			f.createNewFile();
+			FileOutputStream fos = new FileOutputStream(f);
+			fos.write(runhiddenconsole);
+			fos.close();
+		}
 
+		if (args.length > 0) {
+			if (args[0].equals("-auto")) {
+				try {
+					File sf = new File(GetWallPaper.dir + "settings.json");
+					JSONObject json;
+					if (!sf.exists()) {
+						sf.createNewFile();
+						json = new JSONObject();
+						json.put("background", false);
+						PrintStream ps = new PrintStream(sf);
+						ps.print(json);
+						ps.close();
+						JOptionPane.showMessageDialog(null, "未找到配置文件，已创建！", "提示", JOptionPane.INFORMATION_MESSAGE);
+						return true;
+					} else {
+						FileInputStream fis = new FileInputStream(sf);
+						byte[] b = new byte[fis.available()];
+						fis.read(b);
+						fis.close();
+						json = new JSONObject(new String(b));
+						if (json.getBoolean("background")) {
+							while (true) {
+								try {
+									GetWallPaper.downSelectedWallPaper(0);
+									setWallPaper();
+									// System.out.println("Success!");
+									System.exit(0);
+								} catch (UnknownHostException e) {
+									System.err.println("DNS error. Try again after 10 sec...");
+									Thread.sleep(10000);
+								} catch (SocketException e) {
+									System.err.println("Socket Error. Try again after 10 sec...");
+									Thread.sleep(10000);
+								} catch (RuntimeException e) {
+									if (e.getMessage().equals("WallPaper Address Not Found!"))
+										System.exit(1);
+									else
+										throw e;
+								} catch (Exception e) {
+									// e.printStackTrace();
+									// Thread.sleep(60000);
+									File ef = new File(GetWallPaper.dir + "error.txt");
+									if (ef.exists())
+										ef.delete();
+									ef.createNewFile();
+									PrintStream eps = new PrintStream(ef);
+									e.printStackTrace(eps);
+									eps.close();
+									Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler \""
+											+ GetWallPaper.dir + "error.txt\"");
+									System.exit(1);
+								}
+							}
+						} else {
+							return true;
+						}
+					}
+				} catch (IOException e) {
+					JOptionPane.showMessageDialog(null, "无法读取配置文件！", "错误", JOptionPane.ERROR_MESSAGE);
+					return true;
+				} catch (JSONException e) {
+					JOptionPane.showMessageDialog(null, "配置文件存在错误！", "错误", JOptionPane.ERROR_MESSAGE);
+					File sf = new File(GetWallPaper.dir + "settings.json");
+					JSONObject json = new JSONObject();
+					json.put("background", false);
+					try {
+						sf.delete();
+						sf.createNewFile();
+						FileOutputStream fos = new FileOutputStream(sf);
+						fos.write(json.toString().getBytes());
+						fos.close();
+					} catch (FileNotFoundException e1) {
+						JOptionPane.showMessageDialog(null, "创建配置文件错误！", "错误", JOptionPane.ERROR_MESSAGE);
+						File ef = new File(GetWallPaper.dir + "error.txt");
+						if (ef.exists())
+							ef.delete();
+						ef.createNewFile();
+						PrintStream eps = new PrintStream(ef);
+						e1.printStackTrace(eps);
+						eps.close();
+						Runtime.getRuntime()
+								.exec("rundll32 url.dll,FileProtocolHandler \"" + GetWallPaper.dir + "error.txt\"");
+					} catch (IOException e1) {
+						JOptionPane.showMessageDialog(null, "无法写入配置文件！", "错误", JOptionPane.ERROR_MESSAGE);
+						File ef = new File(GetWallPaper.dir + "error.txt");
+						if (ef.exists())
+							ef.delete();
+						ef.createNewFile();
+						PrintStream eps = new PrintStream(ef);
+						e1.printStackTrace(eps);
+						eps.close();
+						Runtime.getRuntime()
+								.exec("rundll32 url.dll,FileProtocolHandler \"" + GetWallPaper.dir + "error.txt\"");
+					}
+					return true;
+				}
+			}
+		}
 		return true;
 	}
 

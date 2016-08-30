@@ -1,5 +1,7 @@
 *.class
 jna/
+JSON-java/
+bin/
 *.exe4j
 
 
